@@ -1,4 +1,4 @@
-# Projeto com Arduino Nano e Display OLED 🌟
+# Mini-dashboard 
 
 A motivaçao para esse projeto em geral foi a junção de dois amores e uma necessidade:
  **Amores**: Programação e Eletrônica
@@ -8,30 +8,23 @@ A motivaçao para esse projeto em geral foi a junção de dois amores e uma nece
 - **Controle de Brilho**: O brilho da fita LED é ajustado através de um encoder rotativo e é salvo na EEPROM, para ser recuperado após reiniciar o sistema.
 - **Leitura de Temperatura**: O sensor LM35 é usado para ler a temperatura ambiente e exibir o valor no display OLED .
 
-### Classes
-
-- **RotaryEncoder**: Classe que lida com a leitura do encoder rotativo, permitindo ajustar o brilho da fita LED.
-- **EncoderButton**: Classe que lida com o botão do encoder rotativo para navegar pelos menus.
-
 ### Funções Principais 📌
 
-- **`setup()`**: Inicializa o display OLED, o encoder rotativo, o botão e o sensor de temperatura. Exibe a tela de introdução (splash screen).
-- **`loop()`**: Atualiza o estado do botão e do encoder rotativo, além de controlar a mudança de brilho e a atualização do menu.
-- **`updateMenu()`**: Atualiza o menu atual no display OLED, alternando entre temperatura, brilho, sobre o projeto e outros.
-- **`showTemperature()`**: Exibe a temperatura atual, calculada a partir do valor do sensor LM35, em graus Celsius.
-- **`showBrightness()`**: Exibe o nível de brilho atual da fita LED e um gráfico de barras  mostrando o valor.
-- **`showAbout()`**: Exibe informações sobre o projeto.
 - **`splashScreen()`**: Exibe o logo personalizado na tela inicial.
- 
+- **`updateMenu()`**: Atualiza o menu atual no display OLED.
+- **`changeBrightness()`**: Atualiza o valor do brilho dos leds.
+- **`updateMenuButton()`**: Realiza ações durante os clicks no botao.
+- **`showTemperature()`**: Exibe a temperatura atual, calculada a partir do valor do sensor LM35, em graus Celsius.
+- **`showBrightness()`**: Exibe o nível de brilho atual da fita LED e um gráfico de barras mostrando o valor.
+- **`showAbout()`**: Exibe informações sobre o projeto.
+
 ## Componentes 🔧
 
 - **Arduino Nano**
 - **Display OLED 128x32 (SSD1306)**
 - **Sensor de Temperatura LM35**
-- **Encoder Rotativo**
-- **Fita de LED controlada via PWM**
+- **Fita de LED**
 - **MOSFET IRF540** para controle da fita de LED
-- **EEPROM** para salvar configurações
 - **Resistores** para proteção de componentes
 - **Capacitores** para estabilização de tensão
 - **Botão** para navegação entre menus
@@ -58,15 +51,11 @@ O **LM35** é um sensor analógico de temperatura que fornece uma tensão propor
 
 O **MOSFET IRF540** controla a corrente que passa pela fita de LED. A tensão de controle no **Gate** (via pino PWM do Arduino) ajusta o brilho da fita de LED. O resistor e o capacitor ajudam a estabilizar e proteger os componentes.
 
-### **Encoder Rotativo e Botão**
-
-- **Pino A do Encoder** → Pino **2** do Arduino
-- **Pino B do Encoder** → Pino **3** do Arduino
-- **Botão do Encoder** → Pino **4** do Arduino
-- **VCC do Encoder** → Pino **5V** do Arduino
+### **Botão**
+- **Botão do Encoder** → Pino **D2** do Arduino
 - **GND do Encoder** → Pino **GND** do Arduino
 
-O **encoder rotativo** é usado para ajustar o brilho da fita de LED. O botão embutido permite navegar entre os diferentes menus do display OLED.
+O **Botão** permite navegar entre os diferentes menus do display OLED e é usado para ajustar o brilho da fita de LED. .
 
 ### **Display OLED (SSD1306)**
 
@@ -83,10 +72,6 @@ O **display OLED** exibe as informações sobre a temperatura, brilho da fita de
    - Compile e envie o código para o seu **Arduino Nano** usando o **Arduino IDE**.
 
 3. **Operar o sistema**:
-   - Use o **encoder rotativo** para ajustar o brilho da fita de LED.
-   - Use o **botão** para navegar entre os menus.
    - O **display OLED** exibirá a temperatura atual, o nível de brilho e informações sobre o projeto.
-
-## Licença 📜
-
-Este projeto está licenciado sob a **Licença MIT** 📝 - veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+   - Use o **botão** para navegar entre os menus.
+    - Ajuste o brilho segurando o botao por 3 segundos no menu de brilho.
