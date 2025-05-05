@@ -10,6 +10,7 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 const unsigned char bitmap_celta_pixel [] PROGMEM = {
+	// 'celta pixel, 128x32px
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
@@ -68,7 +69,7 @@ int readIndex = 0;
 long total = 0;
 int average = 0;
 
-const int menuButtonPin = 12;
+const int touchPin = A3;
 unsigned long lastPress = 0;
 const unsigned long debounce = 50;
 
@@ -77,8 +78,6 @@ void setup() {
   display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR);
   display.clearDisplay();
 
-  display.setRotation(2);
-
   splashScreen();
 
   display.setTextColor(SSD1306_WHITE);
@@ -86,7 +85,7 @@ void setup() {
   brightness = EEPROM.read(EEPROM_ADDR);
   brightness = constrain(brightness, 0, 100);
 
-  pinMode(menuButtonPin, INPUT_PULLUP);
+  pinMode(touchPin, INPUT);
   pinMode(ledPwmPin, OUTPUT);
 
   for (int i = 0; i < numReadings; i++) {
@@ -120,41 +119,60 @@ void updateMenu() {
 }
 
 void updateMenuButton() {
-  static bool lastState = HIGH;
-  bool state = digitalRead(menuButtonPin);
-
+  static bool lastState = LOW;
+  bool state = digitalRead(touchPin);
   unsigned long now = millis();
+  const unsigned long debounce = 100; // Aumentado para maior estabilidade
 
-  if (lastState == HIGH && state == LOW) { 
+  // Detecta a pressão do botão (transição de LOW para HIGH)
+  if (lastState == LOW && state == HIGH && now - lastPress > debounce) {
     buttonPressStart = now;
+    lastPress = now;
     buttonPressed = true;
+    Serial.println("Botão pressionado (HIGH)");
   }
-  else if (lastState == LOW && state == HIGH) { 
-    buttonPressed = false;
 
-    if (now - buttonPressStart < longPressTime) { 
-      
-      if (!isEditing) {
-        currentMenu = (currentMenu + 1) % totalMenus;
-      } else {
-        
-        brightness += 5;
-        if (brightness > 100) {
-          brightness = 0;
+  // Durante a pressão, verifica toque longo
+  if (buttonPressed && state == HIGH && currentMenu == 1) {
+    unsigned long pressDuration = now - buttonPressStart;
+    if (pressDuration >= longPressTime && !isEditing) {
+      isEditing = true;
+      buttonPressed = false; // Evita múltiplas ativações
+      Serial.println("Entrou no modo de edição");
+    } else if (pressDuration >= longPressTime && isEditing) {
+      isEditing = false;
+      buttonPressed = false;
+      Serial.println("Saiu do modo de edição");
+    }
+  }
+
+  // Detecta a liberação do botão (transição de HIGH para LOW)
+  if (lastState == HIGH && state == LOW && now - lastPress > debounce) {
+    lastPress = now;
+    if (buttonPressed) {
+      unsigned long pressDuration = now - buttonPressStart;
+      buttonPressed = false;
+
+      // Processa apenas toques curtos (< 3 segundos)
+      if (pressDuration < longPressTime && pressDuration > debounce) {
+        if (!isEditing) {
+          // Navega entre os menus
+          currentMenu = (currentMenu + 1) % totalMenus;
+          Serial.print("Menu atual: ");
+          Serial.println(currentMenu);
+        } else if (currentMenu == 1) {
+          // Ajusta o brilho no modo de edição
+          brightness += 5;
+          if (brightness > 100) brightness = 0;
+          lastBrightness = brightness;
+          lastChangeTime = now;
+          brightnessSaved = false;
+          Serial.print("Brilho ajustado: ");
+          Serial.println(brightness);
         }
-        lastBrightness = brightness;
-        lastChangeTime = millis();
-        brightnessSaved = false;
       }
     }
-    
-  }
-
-  
-  if (buttonPressed && (now - buttonPressStart >= longPressTime)) {
-    
-    isEditing = !isEditing;
-    buttonPressed = false;  
+    Serial.println("Botão liberado (LOW)");
   }
 
   lastState = state;
@@ -225,8 +243,8 @@ void showBrightness() {
   display.setTextSize(1);
 
   if (isEditing) {
-  display.setCursor(110, 0);
-  display.println("Ed.");
+    display.setCursor(110, 0);
+    display.println("Ed.");
   }
 
   display.setCursor((SCREEN_WIDTH - 30) / 2, 0);
@@ -282,4 +300,3 @@ void blinkText(String text, int times, int delayTime) {
     delay(delayTime);
   }
 }
-
